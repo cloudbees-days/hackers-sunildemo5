@@ -1,0 +1,35 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+
+name: code-scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    steps:
+      - name: Checkout code
+        uses: cloudbees-io/checkout@v1
+
+      - name: Scan with Gitleaks
+        uses: cloudbees-io/gitleaks-secret-scan-code@v1
+        with:
+          name: gitleaks-scan
+
+      - name: Scan with Trivy
+        uses: cloudbees-io/trivy-scan-container@v1
+        with:
+          name: trivy-scan
+          image-location: node
+          image-tag: "18-alpine"
+
+      - name: Scan with SonarQube Bundled
+        uses: cloudbees-io/sonarqube-bundled-sast-scan-code@v2
+        with:
+          name: sonarqube-scan
+          language: JAVASCRIPT
